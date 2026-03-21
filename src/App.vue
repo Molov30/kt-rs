@@ -39,43 +39,6 @@ async function notifyDump(path: string) {
 
 const groups: CommandGroup[] = [
     {
-        id: "system",
-        label: "System",
-        commands: [
-            {
-                id: "greet",
-                label: "Greet from Rust",
-                description: "Call the Tauri greet command",
-                icon: icons.greet,
-                params: [
-                    {
-                        name: "name",
-                        label: "Your name",
-                        type: "text",
-                        placeholder: "World",
-                        default: "",
-                        required: true,
-                    },
-                ],
-                action: async (params) => {
-                    const result = await invoke<string>("greet", {
-                        name: params?.name ?? "World",
-                    });
-                    lastResult.value = result;
-                },
-            },
-            {
-                id: "clear",
-                label: "Clear output",
-                description: "Clear the result area",
-                icon: icons.clear,
-                action: () => {
-                    lastResult.value = "";
-                },
-            },
-        ],
-    },
-    {
         id: "service",
         label: "Service",
         commands: [
@@ -181,31 +144,46 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
-    <div class="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center pt-8 px-4 font-sans">
+    <div
+        class="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center pt-8 px-4 font-sans"
+    >
         <!-- search bar -->
         <div class="w-full max-w-sm">
             <button
                 class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs hover:border-zinc-700 hover:text-zinc-300 transition-colors"
                 @click="paletteOpen = true"
             >
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg
+                    class="w-3.5 h-3.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                >
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
                 </svg>
                 <span class="flex-1 text-left">Search commands...</span>
-                <kbd class="text-[9px] border border-zinc-700 rounded px-1">⌘K</kbd>
+                <kbd class="text-[9px] border border-zinc-700 rounded px-1"
+                    >⌘K</kbd
+                >
             </button>
         </div>
 
         <!-- result -->
         <div class="w-full max-w-sm mt-3" v-if="lastResult">
-            <p class="text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+            <p
+                class="text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2"
+            >
                 {{ lastResult }}
             </p>
         </div>
 
         <!-- inline config -->
-        <div v-if="configCommand" class="w-full max-w-sm mt-5 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-4">
+        <div
+            v-if="configCommand"
+            class="w-full max-w-sm mt-5 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-4"
+        >
             <CommandConfig
                 :command="configCommand"
                 @run="runWithParams"
@@ -217,25 +195,59 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         <div v-else class="w-full max-w-sm mt-5 flex flex-col gap-4">
             <div v-for="group in groups" :key="group.id">
                 <div class="mb-1 px-1">
-                    <span class="text-[9px] font-semibold text-zinc-600 uppercase tracking-widest">{{ group.label }}</span>
+                    <span
+                        class="text-[9px] font-semibold text-zinc-600 uppercase tracking-widest"
+                        >{{ group.label }}</span
+                    >
                 </div>
                 <div class="rounded-lg border border-zinc-800 overflow-hidden">
                     <button
                         v-for="(cmd, i) in group.commands"
                         :key="cmd.id"
                         class="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-zinc-800/60 active:bg-zinc-800"
-                        :class="i < group.commands.length - 1 ? 'border-b border-zinc-800' : ''"
+                        :class="
+                            i < group.commands.length - 1
+                                ? 'border-b border-zinc-800'
+                                : ''
+                        "
                         @click="selectInline(cmd)"
                     >
                         <CommandIcon v-if="cmd.icon" :icon="cmd.icon" />
-                        <div v-else class="w-3.5 h-3.5 shrink-0 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-                            <span class="text-[8px] text-zinc-600 font-mono leading-none">{{ cmd.label.charAt(0).toUpperCase() }}</span>
+                        <div
+                            v-else
+                            class="w-3.5 h-3.5 shrink-0 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center"
+                        >
+                            <span
+                                class="text-[8px] text-zinc-600 font-mono leading-none"
+                                >{{ cmd.label.charAt(0).toUpperCase() }}</span
+                            >
                         </div>
-                        <span class="text-xs text-zinc-200 flex-1 truncate">{{ cmd.label }}</span>
-                        <span v-if="cmd.description" class="text-[10px] text-zinc-600 truncate max-w-[120px] hidden sm:block">{{ cmd.description }}</span>
-                        <kbd v-if="cmd.shortcut" class="text-[9px] text-zinc-500 border border-zinc-700 rounded px-1 py-0.5 shrink-0">{{ cmd.shortcut }}</kbd>
-                        <svg v-if="cmd.params?.length" class="w-3 h-3 text-zinc-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6" />
+                        <span class="text-xs text-zinc-200 flex-1 truncate">{{
+                            cmd.label
+                        }}</span>
+                        <span
+                            v-if="cmd.description"
+                            class="text-[10px] text-zinc-600 truncate max-w-[120px] hidden sm:block"
+                            >{{ cmd.description }}</span
+                        >
+                        <kbd
+                            v-if="cmd.shortcut"
+                            class="text-[9px] text-zinc-500 border border-zinc-700 rounded px-1 py-0.5 shrink-0"
+                            >{{ cmd.shortcut }}</kbd
+                        >
+                        <svg
+                            v-if="cmd.params?.length"
+                            class="w-3 h-3 text-zinc-600 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m9 18 6-6-6-6"
+                            />
                         </svg>
                     </button>
                 </div>
