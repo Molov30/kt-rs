@@ -44,8 +44,10 @@
                 ],
                 "section": "utils",
                 "priority": "optional",
+                "postInstallScript": "deb-postinst.sh",
                 "files": {
-                    "/usr/share/applications/kt-rs.desktop": "kt-rs.desktop"
+                    "/usr/share/applications/kt-rs.desktop": "kt-rs.desktop",
+                    "/usr/lib/kt-rs/kt-rs-launcher.sh": "kt-rs-launcher.sh"
                 }
             },
 "appimage": {
