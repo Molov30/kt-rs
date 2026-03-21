@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=kt-rs
+Exec=pkexec /usr/bin/kt-rs
+Icon=kt-rs
+Type=Application
+Categories=Utility;System;
+Comment=kt-rs
+Terminal=false
