@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=kt-rs
-Exec=pkexec /usr/bin/kt-rs
+Exec=pkexec env DISPLAY=%DISPLAY% XAUTHORITY=%XAUTHORITY% /usr/bin/kt-rs
 Icon=kt-rs
 Type=Application
 Categories=Utility;System;
