@@ -6,31 +6,29 @@ use crate::state;
 
 #[tauri::command]
 pub async fn restart_service(state: tauri::State<'_, state::AppState>) -> Result<String, String> {
-    let output = tokio::process::Command::new("systemctl")
+    let out = tokio::process::Command::new("systemctl")
         .args(["restart", &state.cfg.service_name])
         .output()
         .await
         .map_err(|e| e.to_string())?;
 
-    if output.status.success() {
-        Ok("OK".to_string())
-    } else {
-        Err(String::from_utf8_lossy(&output.stderr).into_owned())
+    match out.status.success() {
+        true => Ok("OK".to_string()),
+        false => Err(String::from_utf8_lossy(&out.stderr).into_owned()),
     }
 }
 
 #[tauri::command]
 pub async fn start_service(state: tauri::State<'_, state::AppState>) -> Result<String, String> {
-    let output = tokio::process::Command::new("systemctl")
+    let out = tokio::process::Command::new("systemctl")
         .args(["start", &state.cfg.service_name])
         .output()
         .await
         .map_err(|e| e.to_string())?;
 
-    if output.status.success() {
-        Ok("OK".to_string())
-    } else {
-        Err(String::from_utf8_lossy(&output.stderr).into_owned())
+    match out.status.success() {
+        true => Ok("OK".to_string()),
+        false => Err(String::from_utf8_lossy(&out.stderr).into_owned()),
     }
 }
 
