@@ -134,18 +134,70 @@ pub async fn clear_logs(state: tauri::State<'_, state::AppState>) -> Result<Stri
 }
 
 #[tauri::command]
-pub fn send_notification(title: String, body: String) {
-    let _ = notify_rust::Notification::new()
-        .appname("kt-rs")
-        .summary(&title)
-        .body(&body)
-        .urgency(notify_rust::Urgency::Critical)
-        .hint(notify_rust::Hint::Resident(true))
-        .hint(notify_rust::Hint::SoundName(
-            "phone-incoming-call".to_string(),
-        ))
-        .timeout(notify_rust::Timeout::Never)
-        .show();
+pub async fn play_alert() {
+    let wav = generate_beep_wav(880.0, 1.5, 0.85);
+    let players: &[(&str, &[&str])] = &[
+        ("pw-play", &["-"]),
+        ("paplay", &["-"]),
+        ("aplay", &["-q", "-"]),
+    ];
+    for (player, args) in players {
+        use std::io::Write;
+        use std::process::Stdio;
+        let child = std::process::Command::new(player)
+            .args(*args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn();
+        if let Ok(mut child) = child {
+            if let Some(mut stdin) = child.stdin.take() {
+                let _ = stdin.write_all(&wav);
+            }
+            if child.wait().map(|s| s.success()).unwrap_or(false) {
+                return;
+            }
+        }
+    }
+}
+
+fn generate_beep_wav(freq: f32, duration_secs: f32, amplitude: f32) -> Vec<u8> {
+    let sample_rate: u32 = 44100;
+    let samples = (sample_rate as f32 * duration_secs) as u32;
+    let data_size = samples * 2;
+
+    let mut wav = Vec::with_capacity(44 + data_size as usize);
+    wav.extend_from_slice(b"RIFF");
+    wav.extend_from_slice(&(36 + data_size).to_le_bytes());
+    wav.extend_from_slice(b"WAVE");
+    wav.extend_from_slice(b"fmt ");
+    wav.extend_from_slice(&16u32.to_le_bytes());
+    wav.extend_from_slice(&1u16.to_le_bytes()); // PCM
+    wav.extend_from_slice(&1u16.to_le_bytes()); // mono
+    wav.extend_from_slice(&sample_rate.to_le_bytes());
+    wav.extend_from_slice(&(sample_rate * 2).to_le_bytes());
+    wav.extend_from_slice(&2u16.to_le_bytes());
+    wav.extend_from_slice(&16u16.to_le_bytes());
+    wav.extend_from_slice(b"data");
+    wav.extend_from_slice(&data_size.to_le_bytes());
+
+    for i in 0..samples {
+        let t = i as f32 / sample_rate as f32;
+        let envelope = if t < 0.02 {
+            t / 0.02
+        } else if t > duration_secs - 0.1 {
+            (duration_secs - t) / 0.1
+        } else {
+            1.0
+        };
+        let sample = (envelope
+            * amplitude
+            * (2.0 * std::f32::consts::PI * freq * t).sin()
+            * i16::MAX as f32) as i16;
+        wav.extend_from_slice(&sample.to_le_bytes());
+    }
+
+    wav
 }
 
 pub fn watch_dumps(app: tauri::AppHandle) {

@@ -6,12 +6,14 @@ import CommandPalette from "./components/CommandPalette.vue";
 import CommandIcon from "./components/CommandIcon.vue";
 import CommandConfig from "./components/CommandConfig.vue";
 import ToastList from "./components/ToastList.vue";
+import DumpAlert from "./components/DumpAlert.vue";
 import type { Command, CommandGroup } from "./types/commands";
 import { useToast } from "./composables/useToast";
 
 const paletteOpen = ref(false);
 const lastResult = ref("");
 const configCommand = ref<Command | null>(null);
+const pendingDumps = ref<string[]>([]);
 const { show } = useToast();
 
 const icons = {
@@ -33,9 +35,6 @@ async function runServiceCommand(command: string, label: string) {
     }
 }
 
-async function notifyDump(path: string) {
-    await invoke("send_notification", { title: "New dump", body: path });
-}
 
 const groups: CommandGroup[] = [
     {
@@ -136,8 +135,7 @@ function onKeydown(e: KeyboardEvent) {
 onMounted(async () => {
     window.addEventListener("keydown", onKeydown);
     await listen<string>("new-dump", (event) => {
-        show(`New dump: ${event.payload}`, "error");
-        notifyDump(event.payload);
+        pendingDumps.value.push(event.payload);
     });
 });
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
@@ -256,5 +254,10 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
         <CommandPalette v-model:open="paletteOpen" :groups="groups" />
         <ToastList />
+        <DumpAlert
+            v-if="pendingDumps.length"
+            :dumps="pendingDumps"
+            @dismiss="pendingDumps = []"
+        />
     </div>
 </template>

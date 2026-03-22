@@ -2,7 +2,7 @@ mod commands;
 mod state;
 
 use commands::{
-    clear_logs, disable_obsolete, enable_debug, kill_ui, restart_service, send_notification,
+    clear_logs, disable_obsolete, enable_debug, kill_ui, play_alert, restart_service,
     start_service, stop_service, watch_dumps,
 };
 use state::AppState;
@@ -19,7 +19,7 @@ pub fn run() {
             enable_debug,
             disable_obsolete,
             clear_logs,
-            send_notification,
+            play_alert,
         ])
         .setup(|app| {
             watch_dumps(app.handle().clone());
